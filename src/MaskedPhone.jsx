@@ -1,26 +1,7 @@
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export const MaskedPhone = () => {
-  const valueRef = useRef("");
-  const [value, setValue] = useState("");
-  const [actualValue, setActualValue] = useState("");
-  useEffect(() => {
-    if (value.length < 7) {
-      setActualValue(() => value);
-    } else if (value.length >= 7) {
-      const prevValue = valueRef.current;
-
-      if (prevValue.length > value.length) {
-        setActualValue((prevActual) =>
-          prevActual.slice(0, prevActual.length - 1)
-        );
-      } else if (value[value.length - 1] !== "*") {
-        setActualValue((prevActual) => prevActual + value[value.length - 1]);
-        setValue(() => value.slice(0, 6) + "*".repeat(value.length - 6));
-      }
-      valueRef.current = value;
-    }
-  }, [value]);
+  const { actualValue, maskedValue, setValue } = useMask(7);
   return (
     <>
       {JSON.stringify(
@@ -32,7 +13,7 @@ export const MaskedPhone = () => {
       )}
       <input
         type="text"
-        value={value}
+        value={maskedValue}
         onChange={(e) => {
           setValue(e.target.value);
         }}
@@ -40,12 +21,13 @@ export const MaskedPhone = () => {
     </>
   );
 };
-const useMask = (start = 0, end = 0, maskChar = "*") => {
+
+const useMask = (start = 7, maskChar = "*") => {
   const valueRef = useRef("");
   const [maskedValue, setMaskedValue] = useState("");
   const [actualValue, setActualValue] = useState("");
   useEffect(() => {
-    if (maskedValue.length < start && maskedValue.length > end) {
+    if (maskedValue.length < start) {
       setActualValue(() => maskedValue);
     } else {
       const prevValue = valueRef.current;
@@ -54,18 +36,19 @@ const useMask = (start = 0, end = 0, maskChar = "*") => {
         setActualValue((prevActual) =>
           prevActual.slice(0, prevActual.length - 1)
         );
-      } else if (maskedValue[maskedValue.length - 1] !== "*") {
+      } else if (maskedValue[maskedValue.length - 1] !== maskChar) {
         setActualValue(
           (prevActual) => prevActual + maskedValue[maskedValue.length - 1]
         );
         setMaskedValue(
           () =>
-            maskedValue.slice(start, end) + "*".repeat(maskedValue.length - 6)
+            maskedValue.slice(0, start) +
+            maskChar.repeat(maskedValue.length - start)
         );
       }
       valueRef.current = maskedValue;
     }
-  }, [maskedValue, start, end, maskChar]);
+  }, [maskedValue, start, maskChar]);
 
-  return { actualValue, setValue: setMaskedValue };
+  return { actualValue, maskedValue, setValue: setMaskedValue };
 };
